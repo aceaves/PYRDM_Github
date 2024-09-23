@@ -1,3 +1,33 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Sep 23 16:24:21 2024
+
+@author: ashto
+"""
+
+# app.py
+import streamlit as st
+
+# Title of the app
+st.title("PYRDM App")
+
+# A simple text input
+name = st.text_input("Enter your name:")
+
+# Display a message if the name is entered
+if name:
+    st.write(f"Hello, {name}!")
+
+# A simple slider
+age = st.slider("Select your age", 0, 100, 25)
+
+# Display the selected age
+st.write(f"You are {age} years old.")
+
+# A simple button
+if st.button("Click Me"):
+    st.write("You clicked the button!")
+
 ##############################################################################
 ##########  PYRDM CODE 3.0 CREATED BY ASHTON EAVES
 ##############################################################################
@@ -6,8 +36,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage.filters import gaussian_filter1d
+import streamlit as st
+
 #from plotnine import ggplot, geom_point, aes, stat_smooth, facet_wrap
-os.chdir('C:/Users/aeav330/Desktop/python_scripts/dappy/PYRDM')
+#os.chdir('C:/Users/ashto/OneDrive/Documents/GitHub/PYRDM_Github')
 
 S1 = pd.read_excel('./inputs/RCP0.xlsm')
 S2 = pd.read_excel('./inputs/RCP45.xlsm')
@@ -30,20 +62,20 @@ for index, data in enumerate(list_of_dfs):
 #Conditional statements for variables:
 
 #Total savings, better than at the start of the period.
-    data.loc[data['Annual Expected Loss'] < 50000000, 'Annual Expected Loss'] = 0
-    data.loc[data['Annual Expected Loss'] > 300000000, 'Annual Expected Loss'] = 8
-    data.loc[(data['Annual Expected Loss'] >= 200000000)&(data['Annual Expected Loss'] < 300000000), 
+    data.loc[data['Annual Expected Loss'] < 25000000, 'Annual Expected Loss'] = 0
+    data.loc[data['Annual Expected Loss'] >= 100000000, 'Annual Expected Loss'] = 8
+    data.loc[(data['Annual Expected Loss'] >= 75000000)&(data['Annual Expected Loss'] < 100000000), 
        'Annual Expected Loss'] = 6
-    data.loc[(data['Annual Expected Loss'] >= 100000000)&(data['Annual Expected Loss'] < 200000000), 
+    data.loc[(data['Annual Expected Loss'] >= 50000000)&(data['Annual Expected Loss'] < 75000000), 
        'Annual Expected Loss'] = 4
-    data.loc[(data['Annual Expected Loss'] >= 50000000)&(data['Annual Expected Loss'] < 100000000), 
+    data.loc[(data['Annual Expected Loss'] >= 25000000)&(data['Annual Expected Loss'] < 50000000), 
        'Annual Expected Loss'] = 2
 #Property premium justified before decline and the initial premium.
-    data.loc[data['Property premium'] >= 4000, 'Property premium'] = 4
-    data.loc[(data['Property premium'] >= 0)&(data['Property premium'] < 1000), 'Property premium'] = 6  
+    data.loc[data['Property premium'] >= 5000, 'Property premium'] = 3
+    data.loc[(data['Property premium'] >= 0)&(data['Property premium'] < 1000), 'Property premium'] = 4  
     data.loc[(data['Property premium'] >= 1000)&(data['Property premium'] < 2000), 'Property premium'] = 0
     data.loc[(data['Property premium'] >= 2000)&(data['Property premium'] < 3000), 'Property premium'] = 1
-    data.loc[(data['Property premium'] >= 3000)&(data['Property premium'] < 4000), 'Property premium'] = 2
+    data.loc[(data['Property premium'] >= 3000)&(data['Property premium'] < 5000), 'Property premium'] = 2
 #hhldconsumprt, tracking increase with time.
     data.loc[data['hhldconsumprt'] < 1.24, 'hhldconsumprt'] = 4
     data.loc[data['hhldconsumprt'] >= 1.255, 'hhldconsumprt'] = 0 
@@ -52,46 +84,46 @@ for index, data in enumerate(list_of_dfs):
     data.loc[(data['hhldconsumprt'] >= 1.24)&(data['hhldconsumprt'] < 1.245), 'hhldconsumprt'] = 3
 #unemployment rate, the lower the better.
     data.loc[data['unemploymentrt'] >= 0.048, 'unemploymentrt'] = 4
-    data.loc[(data['unemploymentrt'] >= 0.042)&(data['unemploymentrt'] < 0.044), 'unemploymentrt'] = 1
-    data.loc[(data['unemploymentrt'] >= 0.044)&(data['unemploymentrt'] < 0.046), 'unemploymentrt'] = 2
+    data.loc[(data['unemploymentrt'] >= 0.044)&(data['unemploymentrt'] < 0.045), 'unemploymentrt'] = 1
+    data.loc[(data['unemploymentrt'] >= 0.045)&(data['unemploymentrt'] < 0.046), 'unemploymentrt'] = 2
     data.loc[(data['unemploymentrt'] >= 0.046)&(data['unemploymentrt'] < 0.048), 'unemploymentrt'] = 3
-    data.loc[data['unemploymentrt'] < 0.042, 'unemploymentrt'] = 0
+    data.loc[data['unemploymentrt'] < 0.044, 'unemploymentrt'] = 0
 #Govt balance at start of period, more consumption is better.
-    data.loc[data['CentralG Consumption'] >= 4000, 'CentralG Consumption'] = 0 
-    data.loc[data['CentralG Consumption'] < 1000, 'CentralG Consumption'] = 4 
-    data.loc[(data['CentralG Consumption'] >= 2000)&(data['CentralG Consumption'] < 3000), 
+    data.loc[data['CentralG Consumption'] >= 2200, 'CentralG Consumption'] = 0 
+    data.loc[data['CentralG Consumption'] < 1400, 'CentralG Consumption'] = 4 
+    data.loc[(data['CentralG Consumption'] >= 1800)&(data['CentralG Consumption'] < 2000), 
        'CentralG Consumption'] = 2     
-    data.loc[(data['CentralG Consumption'] >= 1000)&(data['CentralG Consumption'] < 2000), 
+    data.loc[(data['CentralG Consumption'] >= 1400)&(data['CentralG Consumption'] < 1800), 
        'CentralG Consumption'] = 3    
-    data.loc[(data['CentralG Consumption'] >= 3000)&(data['CentralG Consumption'] < 4000), 
+    data.loc[(data['CentralG Consumption'] >= 2000)&(data['CentralG Consumption'] < 2200), 
        'CentralG Consumption'] = 1
 #Govt balance at start of period, more consumption is better.
-    data.loc[data['LocalG Consumption'] < 400, 'LocalG Consumption'] = 3 
-    data.loc[data['LocalG Consumption'] >= 600, 'LocalG Consumption'] = 4 
-    data.loc[(data['LocalG Consumption'] >= 550)&(data['LocalG Consumption'] < 600), 
+    data.loc[data['LocalG Consumption'] < 200, 'LocalG Consumption'] = 4 
+    data.loc[data['LocalG Consumption'] >= 350, 'LocalG Consumption'] = 0
+    data.loc[(data['LocalG Consumption'] >= 250)&(data['LocalG Consumption'] < 300),
        'LocalG Consumption'] = 2     
-    data.loc[(data['LocalG Consumption'] >= 400)&(data['LocalG Consumption'] < 500), 
+    data.loc[(data['LocalG Consumption'] >= 300)&(data['LocalG Consumption'] < 350), 
        'LocalG Consumption'] = 3    
-    data.loc[(data['LocalG Consumption'] >= 500)&(data['LocalG Consumption'] < 550), 
+    data.loc[(data['LocalG Consumption'] >= 200)&(data['LocalG Consumption'] < 250), 
        'LocalG Consumption'] = 1
 #Total value added, tracking increase with time.
-    data.loc[data['dtotalvalueadded'] < 10000, 'dtotalvalueadded'] = 8
-    data.loc[(data['dtotalvalueadded'] >= 10000)&(data['dtotalvalueadded'] < 11000), 'dtotalvalueadded'] = 6
-    data.loc[(data['dtotalvalueadded'] >= 11000)&(data['dtotalvalueadded'] < 12000), 'dtotalvalueadded'] = 4
-    data.loc[(data['dtotalvalueadded'] >= 12000)&(data['dtotalvalueadded'] < 13000), 'dtotalvalueadded'] = 2
-    data.loc[data['dtotalvalueadded'] >= 13000, 'dtotalvalueadded'] = 0
+    data.loc[data['dtotalvalueadded'] < 8000, 'dtotalvalueadded'] = 8
+    data.loc[(data['dtotalvalueadded'] >= 8000)&(data['dtotalvalueadded'] < 9500), 'dtotalvalueadded'] = 6
+    data.loc[(data['dtotalvalueadded'] >= 9500)&(data['dtotalvalueadded'] < 11000), 'dtotalvalueadded'] = 4
+    data.loc[(data['dtotalvalueadded'] >= 11000)&(data['dtotalvalueadded'] < 12500), 'dtotalvalueadded'] = 2
+    data.loc[data['dtotalvalueadded'] >= 12500, 'dtotalvalueadded'] = 0
 #actual production, tracking increase with time.
-    data.loc[data['totactualprod'] < 20000, 'totactualprod'] = 4
-    data.loc[(data['totactualprod'] >= 20000)&(data['totactualprod'] < 25000), 'totactualprod'] = 3
-    data.loc[(data['totactualprod'] >= 25000)&(data['totactualprod'] < 30000), 'totactualprod'] = 2            
-    data.loc[(data['totactualprod'] >= 30000)&(data['totactualprod'] < 35000), 'totactualprod'] = 1
-    data.loc[data['totactualprod'] >= 35000, 'totactualprod'] = 0
+    data.loc[data['totactualprod'] < 24000, 'totactualprod'] = 4
+    data.loc[(data['totactualprod'] >= 24000)&(data['totactualprod'] < 28000), 'totactualprod'] = 3
+    data.loc[(data['totactualprod'] >= 28000)&(data['totactualprod'] < 32000), 'totactualprod'] = 2            
+    data.loc[(data['totactualprod'] >= 32000)&(data['totactualprod'] < 36000), 'totactualprod'] = 1
+    data.loc[data['totactualprod'] >= 36000, 'totactualprod'] = 0
 #Pinvestcc, price of investment capital, lower the better.
-    data.loc[data['Pinvestcc'] > 1.4, 'Pinvestcc'] = 4
-    data.loc[data['Pinvestcc'] <= 1.1, 'Pinvestcc'] = 0
-    data.loc[(data['Pinvestcc'] > 1.1)&(data['Pinvestcc'] <= 1.2), 'Pinvestcc'] = 1
-    data.loc[(data['Pinvestcc'] > 1.2)&(data['Pinvestcc'] <= 1.3), 'Pinvestcc'] = 2
-    data.loc[(data['Pinvestcc'] > 1.3)&(data['Pinvestcc'] <= 1.4), 'Pinvestcc'] = 3
+    data.loc[data['Pinvestcc'] >= 1.4, 'Pinvestcc'] = 4
+    data.loc[data['Pinvestcc'] <= 1.05, 'Pinvestcc'] = 0
+    data.loc[(data['Pinvestcc'] >= 1.05)&(data['Pinvestcc'] < 1.2), 'Pinvestcc'] = 1
+    data.loc[(data['Pinvestcc'] >= 1.2)&(data['Pinvestcc'] < 1.3), 'Pinvestcc'] = 2
+    data.loc[(data['Pinvestcc'] >= 1.3)&(data['Pinvestcc'] < 1.4), 'Pinvestcc'] = 3
 #Landuse ratio, higher the ratio is better.
     data.loc[data['Landuse ratio'] < 0.5, 'Landuse ratio'] = 4
     data.loc[(data['Landuse ratio'] >= 0.5)&(data['Landuse ratio'] < 1),'Landuse ratio'] = 3
@@ -170,14 +202,16 @@ row_names2    = ['2020','2020.25','2020.5','2020.75','2021','2021.25','2021.5','
                  '2046.25','2046.5','2046.75','2047','2047.25','2047.5','2047.75','2048',
                  '2048.25','2048.5','2048.75','2049','2049.25','2049.5','2049.75','2050']
 #Column and row names for scenarios:
-column_names3 = ['RCP0', 'RCP45', 'RCP85', 'RCP45_def', 'RCP85_def','RCP45_bonds',
-                 'RCP45_rates', 'RCP85_bonds', 'RCP85_rates']
-column_names4 = ['RCP0', 'RCP45', 'RCP85', 'RCP45_def', 'RCP85_def', 'RCP45_bonds',
-                 'RCP45_rates', 'RCP85_bonds','RCP85_rates','sum','rank']
+column_names3 = ['RCP0', 'RCP45', 'RCP8.5', 'RCP4.5 Defence', 'RCP8.5 Defence','RCP4.5 Bonds',
+                 'RCP4.5 Rates', 'RCP8.5 Bonds', 'RCP8.5 Rates']
+column_names4 = ['RCP0', 'RCP4.5', 'RCP8.5', 'RCP4.5 Defence', 'RCP8.5 Defence','RCP4.5 Bonds',
+                 'RCP4.5 Rates', 'RCP8.5 Bonds', 'RCP8.5 Rates','sum','rank']
 #Scenario names:
-labels = ['RCP0', 'RCP45', 'RCP85', 'RCP45 Defence', 'RCP85 Defence', 'RCP45 Bonds', 
-          'RCP45 Rates', 'RCP85 Bonds', 'RCP85 Rates']
-
+#labels = ['RCP0', 'RCP4.5', 'RCP8.5', 'RCP4.5 Defence', 'RCP8.5 Defence', 'RCP4.5 Bonds', 
+#          'RCP4.5 Rates', 'RCP8.5 Bonds', 'RCP8.5 Rates']
+labels = ['1. No SLR', '2. Baseline', '3. Worst-case baseline', '4. Defend', 
+          '5. Worst-case defend', '6. Managed retreat bonds', '7. Managed retreat rates', 
+          '8. Worst-case managed retreat bonds', '9. Worst-case managed retreat rates']
 ##############################################################################
 #Condensed Min Regret Matrix:
 ##############################################################################
@@ -347,22 +381,31 @@ ans3 = pd.DataFrame.transpose(ans1[0][0].iloc[:-2,0:9])
 ans4 = pd.DataFrame.transpose(ans1[0][1].iloc[:-2,0:9])
 #Min scenario value by index
 print('Scenario rank:', ans1[0][0][-1:])
+ans1[0][0][-1:].to_csv('./outputs/rank_output.csv')
 
 #Scenario boxplot for all timesteps (ans4):
-bp0=plt.figure(figsize=(10, 10), dpi= 80, facecolor='lightgrey', edgecolor='k')
+bp0=plt.figure(figsize=(12, 10), dpi= 80, facecolor='lightgrey', edgecolor='k')
 bp0=plt.boxplot(ans4,patch_artist=True, showmeans=True)
 #fill with colors
-colors = ['lightcyan', 'paleturquoise', 'aquamarine', 'turquoise', 'mediumturquoise',
-          'lightseagreen', 'teal', 'darkslategrey', 'black']
+#colors = ['lightcyan', 'paleturquoise', 'aquamarine', 'turquoise', 'mediumturquoise',
+#          'lightseagreen', 'teal', 'darkslategrey', 'black']
+colors = ['blue', 'black', 'lightgrey', 'mediumorchid', 'mediumorchid',
+          'sandybrown', 'yellowgreen', 'sandybrown', 'yellowgreen']
 for patch, color in zip(bp0['boxes'], colors):
     patch.set_facecolor(color)
-plt.xticks([1, 2, 3, 4, 5, 6, 7, 8, 9], ['RCP0', 'RCP45', 'RCP85', 'RCP45 Defence', 'RCP85 Defence',
-           'RCP45 Bonds', 'RCP45 Rates', 'RCP85 Bonds', 'RCP85 Rates'], rotation=45)
-plt.title('BOXPLOT OF SCENARIOS ACROSS ALL TIMESTEPS (ans1[0][1])', fontsize=12, color='navy')
-plt.xlabel('SCENARIOS', fontsize=10, color='navy')
-plt.ylabel('MINIMUM REGRET (Deviation from ideal scenario)', fontsize=10, color='navy')
+plt.yticks(fontsize=14)
+plt.xticks([1, 2, 3, 4, 5, 6, 7, 8, 9], ['1. No SLR', '2. Baseline', 
+           '3. Worst-case baseline', '4. Defend', '5. Worst-case defend', 
+           '6. Managed retreat bonds', '7. Managed retreat rates', 
+          '8. Worst-case bonds', '9. Worst-case rates'], 
+    rotation=30, fontsize=14)
+#plt.title('BOXPLOT OF SCENARIOS ACROSS ALL TIMESTEPS', fontsize=16, color='navy')
+plt.xlabel('Scenario', fontsize=16, color='black')
+plt.ylabel('Minimum regret (Deviation from ideal scenario)', fontsize=16, color='black')
 plt.grid(color='lightgrey', linestyle='-', linewidth=0.3)
+plt.tight_layout()
 plt.show()
+
 ##############################################################################
 #Best scenario across all timesteps
 ##############################################################################
@@ -371,18 +414,22 @@ print('Timestep rank:', ans1[0][0].iloc[:-2,-2])
 
 #lineplot by scenario for all timesteps  
 plt.figure(figsize=(20, 10), dpi= 80, facecolor='lightgrey', edgecolor='k')
-
-ysmoothed = gaussian_filter1d(ans1[0][1].iloc[:-2,:-2], sigma=1.5)
+ysmoothed = gaussian_filter1d(ans1[0][1].iloc[:-2,:-2], sigma=2.3)
 plt.plot(ysmoothed)
+np.savetxt('./outputs/ysmoothed_output.csv', ysmoothed, delimiter=",")
+
 
 #plt.plot(ans1[0][1].iloc[:-2,:-2])
 print(ans1[0][1].iloc[:-2,:-2])
-plt.xticks([0, 5, 10, 15, 20, 25, 30], ['2020', '2025', '2030', '2035', '2040', '2045', '2050']
-    , rotation=45)
-plt.title('LINE GRAPH OF SCENARIOS BY TIMESTEP (ans1[0][1])', fontsize=12, color='navy')
-plt.xlabel('TIMESTEP (Year)', fontsize=10, color='navy')
-plt.ylabel('MINIMUM REGRET (Deviation from ideal scenario)', fontsize=10, color='navy')
-plt.legend(labels, title='SCENARIOS')
+plt.yticks(fontsize=14)
+plt.xticks([0, 20, 40, 60, 80, 100, 120], ['2020', '2025', '2030', '2035', '2040', '2045', '2050']
+    , rotation=30, fontsize=14)
+plt.title('LINE GRAPH OF SCENARIOS BY TIMESTEP', fontsize=16, color='black')
+plt.xlabel('YEAR', fontsize=16, color='black')
+plt.ylabel('MINIMUM REGRET (Deviation from ideal scenario)', fontsize=16, color='black')
+lg = plt.legend(labels, title='SCENARIOS', fontsize=16)
+title = lg.get_title()
+title.set_fontsize(14)
 plt.grid(color='lightgrey', linestyle='-', linewidth=0.3)
 plt.show()
 ##############################################################################
