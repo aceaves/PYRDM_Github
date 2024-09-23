@@ -9,24 +9,9 @@ Created on Mon Sep 23 16:24:21 2024
 import streamlit as st
 
 # Title of the app
-st.title("PYRDM App")
+st.title("PYRDM App - managed-retreat.com")
 
-# A simple text input
-name = st.text_input("Enter your name:")
 
-# Display a message if the name is entered
-if name:
-    st.write(f"Hello, {name}!")
-
-# A simple slider
-age = st.slider("Select your age", 0, 100, 25)
-
-# Display the selected age
-st.write(f"You are {age} years old.")
-
-# A simple button
-if st.button("Click Me"):
-    st.write("You clicked the button!")
 
 ##############################################################################
 ##########  PYRDM CODE 3.0 CREATED BY ASHTON EAVES
@@ -37,6 +22,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage.filters import gaussian_filter1d
 import streamlit as st
+import mplcursors
 
 #from plotnine import ggplot, geom_point, aes, stat_smooth, facet_wrap
 #os.chdir('C:/Users/ashto/OneDrive/Documents/GitHub/PYRDM_Github')
@@ -418,19 +404,24 @@ ysmoothed = gaussian_filter1d(ans1[0][1].iloc[:-2,:-2], sigma=2.3)
 plt.plot(ysmoothed)
 np.savetxt('./outputs/ysmoothed_output.csv', ysmoothed, delimiter=",")
 
-
+# Scenario temporal Plot:
 #plt.plot(ans1[0][1].iloc[:-2,:-2])
 print(ans1[0][1].iloc[:-2,:-2])
+
 plt.yticks(fontsize=14)
-plt.xticks([0, 20, 40, 60, 80, 100, 120], ['2020', '2025', '2030', '2035', '2040', '2045', '2050']
-    , rotation=30, fontsize=14)
-plt.title('LINE GRAPH OF SCENARIOS BY TIMESTEP', fontsize=16, color='black')
+plt.xticks([0, 20, 40, 60, 80, 100, 120], ['2020', '2025', '2030', '2035', '2040', '2045', '2050'], 
+           rotation=30, fontsize=14)
+plt.title('SCENARIOS BY TIMESTEP', fontsize=16, color='black')
 plt.xlabel('YEAR', fontsize=16, color='black')
 plt.ylabel('MINIMUM REGRET (Deviation from ideal scenario)', fontsize=16, color='black')
 lg = plt.legend(labels, title='SCENARIOS', fontsize=16)
 title = lg.get_title()
 title.set_fontsize(14)
 plt.grid(color='lightgrey', linestyle='-', linewidth=0.3)
+
+# Enable hot tracking
+mplcursors.cursor(hover=True)
+
 plt.show()
 
 #Streamlit code to display:
