@@ -432,5 +432,18 @@ title = lg.get_title()
 title.set_fontsize(14)
 plt.grid(color='lightgrey', linestyle='-', linewidth=0.3)
 plt.show()
+
+#Streamlit code to display:
+    
+    # Your plotting code
+#fig, ax = plt.subplots()
+#ax.plot([1, 2, 3, 4], [10, 20, 25, 30])  # Example data
+
+# Display the plot in Streamlit
+st.pyplot(plt)
+
+
+
+
 ##############################################################################
 ##############################################################################
