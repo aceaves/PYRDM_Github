@@ -7,3 +7,4 @@ scipy
 mplcursors
 plotnine
 plotly
+openpyxl
