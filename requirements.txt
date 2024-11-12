@@ -1,7 +1,9 @@
-matplotlib
+os
+streamlit
 pandas
 numpy
+matplotlib
 scipy
-os
 mplcursors
 plotnine
+plotly
