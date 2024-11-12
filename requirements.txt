@@ -1,10 +1,9 @@
-os
 streamlit
 pandas
 numpy
-matplotlib
-scipy
 mplcursors
 plotnine
 plotly
 openpyxl
+matplotlib
+scipy
