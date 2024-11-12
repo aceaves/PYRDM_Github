@@ -20,12 +20,12 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.ndimage.filters import gaussian_filter1d
+#from scipy.ndimage.filters import gaussian_filter1d
+from scipy.ndimage import gaussian_filter1d
 import streamlit as st
 import mplcursors
-
-#from plotnine import ggplot, geom_point, aes, stat_smooth, facet_wrap
-#os.chdir('C:/Users/ashto/OneDrive/Documents/GitHub/PYRDM_Github')
+from plotnine import *
+import plotly.express as px
 
 S1 = pd.read_excel('./inputs/RCP0.xlsm')
 S2 = pd.read_excel('./inputs/RCP45.xlsm')
@@ -398,20 +398,19 @@ plt.show()
 #Min timestep (index) value by scenarios:
 print('Timestep rank:', ans1[0][0].iloc[:-2,-2])
 
+#plt.plot(ans1[0][1].iloc[:-2,:-2])
+print(ans1[0][1].iloc[:-2,:-2])
+
 #lineplot by scenario for all timesteps  
 plt.figure(figsize=(20, 10), dpi= 80, facecolor='lightgrey', edgecolor='k')
 ysmoothed = gaussian_filter1d(ans1[0][1].iloc[:-2,:-2], sigma=2.3)
 plt.plot(ysmoothed)
 np.savetxt('./outputs/ysmoothed_output.csv', ysmoothed, delimiter=",")
 
-# Scenario temporal Plot:
-#plt.plot(ans1[0][1].iloc[:-2,:-2])
-print(ans1[0][1].iloc[:-2,:-2])
-
 plt.yticks(fontsize=14)
-plt.xticks([0, 20, 40, 60, 80, 100, 120], ['2020', '2025', '2030', '2035', '2040', '2045', '2050'], 
-           rotation=30, fontsize=14)
-plt.title('SCENARIOS BY TIMESTEP', fontsize=16, color='black')
+plt.xticks([0, 20, 40, 60, 80, 100, 120], ['2020', '2025', '2030', '2035', '2040', '2045', '2050']
+    , rotation=30, fontsize=14)
+plt.title('LINE GRAPH OF SCENARIOS BY TIMESTEP', fontsize=16, color='black')
 plt.xlabel('YEAR', fontsize=16, color='black')
 plt.ylabel('MINIMUM REGRET (Deviation from ideal scenario)', fontsize=16, color='black')
 lg = plt.legend(labels, title='SCENARIOS', fontsize=16)
@@ -419,16 +418,13 @@ title = lg.get_title()
 title.set_fontsize(14)
 plt.grid(color='lightgrey', linestyle='-', linewidth=0.3)
 
-# Enable hot tracking
-mplcursors.cursor(hover=True)
 
+# Enable hot tracking with mplcursors
+cursor = mplcursors.cursor(hover=True)
+
+# Show the plot
 plt.show()
 
-#Streamlit code to display:
-    
-    # Your plotting code
-#fig, ax = plt.subplots()
-#ax.plot([1, 2, 3, 4], [10, 20, 25, 30])  # Example data
 
 # Display the plot in Streamlit
 st.pyplot(plt)
