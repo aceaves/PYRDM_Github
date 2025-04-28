@@ -12,6 +12,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
+import pyarrow as pa
 
 st.title("🌊 PYRDM App — managed-retreat.com")
 
@@ -119,8 +120,12 @@ uploaded_files = st.file_uploader(
 if uploaded_files:
     dfs = []
     for file in uploaded_files:
-        df = pd.read_excel(file, header=0)
+        df = pd.read_excel(file)
         st.write(f"**{file.name}** loaded with {df.shape[0]} rows.")
+        
+        # Convert all columns (except the header row) to float
+        df = df.apply(pd.to_numeric, errors='coerce')  # This ensures all numeric data is coerced into float
+
         df_transformed = transform_data(df)
         dfs.append(df_transformed)
 
@@ -134,13 +139,8 @@ if uploaded_files:
     with st.expander("Preview First File (Transformed)"):
         st.dataframe(dfs[0])
 
-    # Could add visualizations or comparisons between scenarios here!
-
 else:
     st.info("Please upload your Excel files to begin.")
-
-
-
 
 ##############################################################################
 ##############################################################################
