@@ -98,10 +98,10 @@ def transform_data(df):
     for col, rules in transformations.items():
         if col in df.columns:
             new_col = col + '_transformed'
-            df[new_col] = pd.Series([pd.NA] * len(df), dtype="float64")  # use float64
+            df[new_col] = pd.Series([np.nan] * len(df), dtype="float64")  # Use np.nan for compatibility with float64
             for condition, value in rules:
                 mask = condition(df[col])
-                df.loc[mask, new_col] = float(value)  # explicitly cast to float
+                df.loc[mask, new_col] = float(value)  # Explicitly cast to float
     return df
 
 # ----------------------------
