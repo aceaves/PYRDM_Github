@@ -11,8 +11,19 @@ Created on Mon Sep 23 16:24:21 2024
 import streamlit as st
 import pandas as pd
 import numpy as np
-import os
 import pyarrow as pa
+import requests
+import io
+
+# Function to load data from GitHub (or any predefined URL)
+def load_data_from_github(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        return pd.read_csv(io.StringIO(response.text))
+    else:
+        st.error(f"Error loading data from {url}")
+        return None
+    
 
 st.title("🌊 PYRDM App — managed-retreat.com")
 
@@ -108,13 +119,50 @@ def transform_data(df):
 # Upload Files
 # ----------------------------
 
-st.subheader("Upload your scenario files (Excel)")
+st.subheader("Upload your scenario files")
 
-uploaded_files = st.file_uploader(
-    "Upload multiple Excel files",
-    type=["xlsm", "xlsx"],
-    accept_multiple_files=True
+# Option to choose how to load data
+option = st.selectbox(
+    "Select how to load the data",
+    ["Upload Your Own Data", "Load Data from GitHub Repo"]
 )
+
+# Load data based on selection
+if option == "Upload Your Own Data":
+    # File uploader for CSV or Excel files
+    uploaded_file = st.file_uploader("Choose a CSV or Excel file", type=["csv", "xlsx"])
+    
+    if uploaded_file is not None:
+        # Handle the file based on its type (CSV or Excel)
+        if uploaded_file.name.endswith('.csv'):
+            df = pd.read_csv(uploaded_file)
+        elif uploaded_file.name.endswith('.xlsx'):
+            df = pd.read_excel(uploaded_file)
+
+        st.write("Data loaded successfully!")
+        st.dataframe(df)
+
+        # Apply transformations
+        df_transformed = transform_data(df)
+        st.write("Transformed Data")
+        st.dataframe(df_transformed)
+
+elif option == "Load Data from GitHub Repo":
+    # Define the GitHub data URL (replace with your actual URL)
+    github_url = "https://github.com/aceaves/PYRDM_Github"
+    
+    df = load_data_from_github(github_url)
+    if df is not None:
+        st.write("Data loaded from GitHub!")
+        st.dataframe(df)
+        
+        # Apply transformations
+        df_transformed = transform_data(df)
+        st.write("Transformed Data")
+        st.dataframe(df_transformed)
+
+# Option to upload multiple files and process them
+uploaded_files = st.file_uploader("Upload multiple Excel files", type="xlsx", accept_multiple_files=True)
 
 if uploaded_files:
     dfs = []
@@ -123,7 +171,6 @@ if uploaded_files:
         st.write(f"**{file.name}** loaded with {df.shape[0]} rows.")
         
         # Explicitly convert all columns to float64, ignoring errors
-        # This ensures columns with non-numeric values are turned to NaN
         df = df.apply(pd.to_numeric, errors='coerce', axis=0)
 
         # Check for columns that may have an unsupported dtype (e.g., datetime)
@@ -140,15 +187,13 @@ if uploaded_files:
 
     st.success(f"✅ Processed {len(dfs)} files.")
 
-    # Option to download all outputs
-    if st.button("Download All as ZIP (coming soon)"):
-        st.warning("This feature is not yet implemented.")
-
     # Show a preview
     with st.expander("Preview First File (Transformed)"):
         st.dataframe(dfs[0])
 
 else:
     st.info("Please upload your Excel files to begin.")
+    
+    
 ##############################################################################
 ##############################################################################
