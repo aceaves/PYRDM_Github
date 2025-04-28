@@ -119,7 +119,7 @@ uploaded_files = st.file_uploader(
 if uploaded_files:
     dfs = []
     for file in uploaded_files:
-        df = pd.read_excel(file)
+        df = pd.read_excel(file, header=0)
         st.write(f"**{file.name}** loaded with {df.shape[0]} rows.")
         df_transformed = transform_data(df)
         dfs.append(df_transformed)
