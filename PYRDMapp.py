@@ -94,8 +94,7 @@ def transform_data(df):
             (lambda x: x < 0.5, 4)
         ]
     }
-    return transformations
-
+   
     for col, rules in transformations.items():
         if col in df.columns:
             new_col = col + '_transformed'
@@ -123,9 +122,19 @@ if uploaded_files:
         df = pd.read_excel(file)
         st.write(f"**{file.name}** loaded with {df.shape[0]} rows.")
         
-        # Convert all columns (except the header row) to float
-        df = df.apply(pd.to_numeric, errors='coerce')  # This ensures all numeric data is coerced into float
+        # Explicitly convert all columns to float64, ignoring errors
+        # This ensures columns with non-numeric values are turned to NaN
+        df = df.apply(pd.to_numeric, errors='coerce', axis=0)
 
+        # Check for columns that may have an unsupported dtype (e.g., datetime)
+        for col in df.columns:
+            if df[col].dtype == 'object':  # This includes datetime or string columns
+                df[col] = df[col].astype('str')  # Convert to string if not numeric
+
+        # Ensure that all columns are float64 where possible
+        df = df.astype('float64', errors='ignore')
+
+        # Transform data according to the rules
         df_transformed = transform_data(df)
         dfs.append(df_transformed)
 
@@ -141,6 +150,5 @@ if uploaded_files:
 
 else:
     st.info("Please upload your Excel files to begin.")
-
 ##############################################################################
 ##############################################################################
