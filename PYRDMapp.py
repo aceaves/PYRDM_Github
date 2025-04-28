@@ -25,74 +25,76 @@ def transform_data(df):
         'Annual Expected Loss': [
             (lambda x: x < 25_000_000, 0),
             (lambda x: x >= 100_000_000, 8),
-            (lambda x: 75_000_000 <= x < 100_000_000, 6),
-            (lambda x: 50_000_000 <= x < 75_000_000, 4),
-            (lambda x: 25_000_000 <= x < 50_000_000, 2)
+            (lambda x: (75_000_000 <= x) & (x < 100_000_000), 6),
+            (lambda x: (50_000_000 <= x) & (x < 75_000_000), 4),
+            (lambda x: (25_000_000 <= x) & (x < 50_000_000), 2)
         ],
         'Property premium': [
             (lambda x: x >= 5000, 3),
-            (lambda x: 0 <= x < 1000, 4),
-            (lambda x: 1000 <= x < 2000, 0),
-            (lambda x: 2000 <= x < 3000, 1),
-            (lambda x: 3000 <= x < 5000, 2)
+            (lambda x: (0 <= x) & (x < 1000), 4),
+            (lambda x: (1000 <= x) & (x < 2000), 0),
+            (lambda x: (2000 <= x) & (x < 3000), 1),
+            (lambda x: (3000 <= x) & (x < 5000), 2)
         ],
         'hhldconsumprt': [
             (lambda x: x < 1.24, 4),
-            (lambda x: 1.24 <= x < 1.245, 3),
-            (lambda x: 1.245 <= x < 1.25, 2),
-            (lambda x: 1.25 <= x < 1.255, 1),
+            (lambda x: (1.24 <= x) & (x < 1.245), 3),
+            (lambda x: (1.245 <= x) & (x < 1.25), 2),
+            (lambda x: (1.25 <= x) & (x < 1.255), 1),
             (lambda x: x >= 1.255, 0)
         ],
         'unemploymentrt': [
             (lambda x: x < 0.044, 0),
-            (lambda x: 0.044 <= x < 0.045, 1),
-            (lambda x: 0.045 <= x < 0.046, 2),
-            (lambda x: 0.046 <= x < 0.048, 3),
+            (lambda x: (0.044 <= x) & (x < 0.045), 1),
+            (lambda x: (0.045 <= x) & (x < 0.046), 2),
+            (lambda x: (0.046 <= x) & (x < 0.048), 3),
             (lambda x: x >= 0.048, 4)
         ],
         'CentralG Consumption': [
             (lambda x: x >= 2200, 0),
-            (lambda x: 2000 <= x < 2200, 1),
-            (lambda x: 1800 <= x < 2000, 2),
-            (lambda x: 1400 <= x < 1800, 3),
+            (lambda x: (2000 <= x) & (x < 2200), 1),
+            (lambda x: (1800 <= x) & (x < 2000), 2),
+            (lambda x: (1400 <= x) & (x < 1800), 3),
             (lambda x: x < 1400, 4)
         ],
         'LocalG Consumption': [
             (lambda x: x >= 350, 0),
-            (lambda x: 300 <= x < 350, 3),
-            (lambda x: 250 <= x < 300, 2),
-            (lambda x: 200 <= x < 250, 1),
+            (lambda x: (300 <= x) & (x < 350), 3),
+            (lambda x: (250 <= x) & (x < 300), 2),
+            (lambda x: (200 <= x) & (x < 250), 1),
             (lambda x: x < 200, 4)
         ],
         'dtotalvalueadded': [
             (lambda x: x >= 12500, 0),
-            (lambda x: 11000 <= x < 12500, 2),
-            (lambda x: 9500 <= x < 11000, 4),
-            (lambda x: 8000 <= x < 9500, 6),
+            (lambda x: (11000 <= x) & (x < 12500), 2),
+            (lambda x: (9500 <= x) & (x < 11000), 4),
+            (lambda x: (8000 <= x) & (x < 9500), 6),
             (lambda x: x < 8000, 8)
         ],
         'totactualprod': [
             (lambda x: x >= 36000, 0),
-            (lambda x: 32000 <= x < 36000, 1),
-            (lambda x: 28000 <= x < 32000, 2),
-            (lambda x: 24000 <= x < 28000, 3),
+            (lambda x: (32000 <= x) & (x < 36000), 1),
+            (lambda x: (28000 <= x) & (x < 32000), 2),
+            (lambda x: (24000 <= x) & (x < 28000), 3),
             (lambda x: x < 24000, 4)
         ],
         'Pinvestcc': [
             (lambda x: x <= 1.05, 0),
-            (lambda x: 1.05 < x <= 1.2, 1),
-            (lambda x: 1.2 < x <= 1.3, 2),
-            (lambda x: 1.3 < x <= 1.4, 3),
+            (lambda x: (1.05 < x) & (x <= 1.2), 1),
+            (lambda x: (1.2 < x) & (x <= 1.3), 2),
+            (lambda x: (1.3 < x) & (x <= 1.4), 3),
             (lambda x: x > 1.4, 4)
         ],
         'Landuse ratio': [
             (lambda x: x >= 2, 0),
-            (lambda x: 1.5 <= x < 2, 1),
-            (lambda x: 1 <= x < 1.5, 2),
-            (lambda x: 0.5 <= x < 1, 3),
+            (lambda x: (1.5 <= x) & (x < 2), 1),
+            (lambda x: (1 <= x) & (x < 1.5), 2),
+            (lambda x: (0.5 <= x) & (x < 1), 3),
             (lambda x: x < 0.5, 4)
         ]
     }
+    return transformations
+
 
     for col, rules in transformations.items():
         if col in df.columns:
