@@ -148,12 +148,25 @@ if option == "Upload Your Own Data":
         st.dataframe(df_transformed)
 
 elif option == "Load Data from GitHub Repo":
-    # Define the GitHub data URL (replace with your actual URL)
-    github_url = "https://github.com/aceaves/PYRDM_Github"
-    
-    df = load_data_from_github(github_url)
+# List of GitHub URLs
+    github_urls = [
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP0.xlsm",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45.xlsm",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45bonds.xlsm",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45def.xlsm",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45rates.xlsm",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85.xlsm",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85bonds.xlsm",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85def.xlsm",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85rates.xlsm"
+    ]
+
+# Allow the user to choose which file to load from the list
+    selected_url = st.selectbox("Select the file from GitHub Repo", github_urls)
+
+    df = load_data_from_github(selected_url)
     if df is not None:
-        st.write("Data loaded from GitHub!")
+        st.write(f"Data loaded from GitHub: {selected_url.split('/')[-1]}")
         st.dataframe(df)
         
         # Apply transformations
