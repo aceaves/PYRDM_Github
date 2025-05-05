@@ -21,13 +21,15 @@ import os  # You'll likely still need this for path operations, though not for s
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter1d
 
-# Function to load data from GitHub (or any predefined URL)
 def load_data_from_github(url):
     response = requests.get(url)
     if response.status_code == 200:
-        # Determine the correct separator (e.g., comma, semicolon, tab)
-        separator = ','  # Change this if your file uses a different one
-        return pd.read_csv(io.StringIO(response.text), sep=separator)
+        df = pd.read_csv(io.StringIO(response.text))
+        st.write("Dataframe Info (immediately after loading):")
+        st.write(df.info())
+        st.write("Dataframe head (before transformation):")
+        st.dataframe(df.head())
+        return df
     else:
         st.error(f"Error loading data from {url}")
         return None
