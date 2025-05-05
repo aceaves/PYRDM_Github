@@ -24,14 +24,18 @@ from scipy.ndimage import gaussian_filter1d
 def load_data_from_github(url):
     response = requests.get(url)
     if response.status_code == 200:
-        df = pd.read_csv(io.StringIO(response.text))
-        st.write(df.info())
-        st.write("Dataframe head (before transformation):")
-        st.dataframe(df.head())
-        return df
+        try:
+            df = pd.read_csv(io.StringIO(response.text))
+            st.write(f"Successfully loaded: {url.split('/')[-1]}") # Confirmation message
+            return df
+        except Exception as e:
+            st.error(f"Error reading CSV from {url}: {e}")
+            return None
     else:
-        st.error(f"Error loading data from {url}")
+        st.error(f"Error loading data from {url}. Status code: {response.status_code}")
         return None
+    
+   
 
 st.title("🌊 PYRDM App — managed-retreat.com")
 
