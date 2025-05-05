@@ -130,7 +130,7 @@ option = st.selectbox(
 # Load data based on selection
 if option == "Upload Your Own Data":
     # File uploader for CSV or Excel files
-    uploaded_file = st.file_uploader("Choose a CSV or Excel file", type=["csv", "xlsx"])
+    uploaded_file = st.file_uploader("Choose a CSV file", type=["csv"])
     
     if uploaded_file is not None:
         # Handle the file based on its type (CSV or Excel)
@@ -150,15 +150,15 @@ if option == "Upload Your Own Data":
 elif option == "Load Data from GitHub Repo":
 # List of GitHub URLs
     github_urls = [
-        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP0.xlsm",
-        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45.xlsm",
-        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45bonds.xlsm",
-        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45def.xlsm",
-        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45rates.xlsm",
-        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85.xlsm",
-        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85bonds.xlsm",
-        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85def.xlsm",
-        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85rates.xlsm"
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP0.csv",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45.csv",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45bonds.csv",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45def.csv",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45rates.csv",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85.csv",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85bonds.csv",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85def.csv",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85rates.csv"
     ]
 
 # Allow the user to choose which file to load from the list
@@ -175,7 +175,7 @@ elif option == "Load Data from GitHub Repo":
         st.dataframe(df_transformed)
 
 # Option to upload multiple files and process them
-uploaded_files = st.file_uploader("Upload multiple Excel files", type="xlsx", accept_multiple_files=True)
+uploaded_files = st.file_uploader("Upload multiple files", type="xlsx", accept_multiple_files=True)
 
 if uploaded_files:
     dfs = []
