@@ -179,6 +179,108 @@ elif option == "Load Data from GitHub Repo":
                 st.write(f"Loaded and processed: {url.split('/')[-1]}")
                 st.dataframe(transformed_df.head()) # Show a preview
 
+# Create empty numpy arrays for later:
+sum_rank = np.array([])
+sum_rank2 = np.array([])
+
+
+# Min Regret Analysis Section
+if list_of_transformed_dfs:
+    st.subheader("Min Regret Analysis")
+
+    # Assign the loaded and transformed DataFrames to variables
+    S1, S2, S3, S4, S5, S6, S7, S8, S9 = None, None, None, None, None, None, None, None, None
+    try:
+        S1, S2, S3, S4, S5, S6, S7, S8, S9 = list_of_transformed_dfs
+    except ValueError as e:
+        st.error(f"Error unpacking list_of_transformed_dfs: {e}. Length is {len(list_of_transformed_dfs)}")
+
+    if all(df is not None for df in [S1, S2, S3, S4, S5, S6, S7, S8, S9]):
+        #Loop through files, classify and index:
+        list_of_dfs = [S1, S2, S3, S4, S5, S6, S7, S8, S9]
+
+        # Delete index column
+        a = S1.values
+        b = S2.values
+        c = S3.values
+        d = S4.values
+        e = S5.values
+        f = S6.values
+        g = S7.values
+        h = S8.values
+        j = S9.values
+        st.write(f"Length of list_of_dfs: {len(list_of_dfs)}")
+
+        try:
+            ans = [sum_rank(i) for i in [a,b,c,d,e,f,g,h,j]]
+            st.write(f"Shape of ans: {len(ans) if ans else None}, type of ans[0]: {type(ans[0]) if ans and ans[0] else None}")
+            print(ans)
+        except Exception as e:
+            st.error(f"Error in sum_rank function: {e}")
+            ans = None
+
+        if ans:
+            try:
+                Scenarios = []
+                # ... (appending to Scenarios)
+                Scenarios = np.array(Scenarios)
+                ScenariosT = np.transpose(Scenarios)
+                st.write(f"Shape of ScenariosT: {ScenariosT.shape}")
+                ans1 = [sum_rank2(j) for j in [ScenariosT]]
+                st.write(f"Shape of ans1: {len(ans1) if ans1 else None}, type of ans1[0]: {type(ans1[0]) if ans1 and ans1[0] else None}")
+                print('Scenarios all ans1', ans1)
+            except Exception as e:
+                st.error(f"Error in the Min Regret Analysis (after sum_rank): {e}")
+                ans1 = None
+
+            if ans1:
+                # ... (plotting code with try-except blocks)
+                pass
+
+    else:
+        st.warning("Not all DataFrames were loaded and transformed successfully. Min Regret Analysis will not proceed.")
+
+
+        try:
+            ans = [sum_rank(i) for i in [a,b,c,d,e,f,g,h,j]]
+            st.write(f"Shape of ans: {len(ans) if ans else None}, type of ans[0]: {type(ans[0]) if ans and ans[0] else None}")
+            print(ans)
+        except Exception as e:
+            st.error(f"Error in sum_rank function: {e}")
+            ans = None
+
+        if ans:
+            # ... (rest of your Min Regret Analysis code, including sum_rank2 and plotting)
+            try:
+                Scenarios = []
+                # ... (appending to Scenarios)
+                Scenarios = np.array(Scenarios)
+                ScenariosT = np.transpose(Scenarios)
+                st.write(f"Shape of ScenariosT: {ScenariosT.shape}")
+                ans1 = [sum_rank2(j) for j in [ScenariosT]]
+                st.write(f"Shape of ans1: {len(ans1) if ans1 else None}, type of ans1[0]: {type(ans1[0]) if ans1 and ans1[0] else None}")
+                print('Scenarios all ans1', ans1)
+            except Exception as e:
+                st.error(f"Error in the Min Regret Analysis (after sum_rank): {e}")
+                ans1 = None
+
+            if ans1:
+                # ... (plotting code with try-except blocks)
+                try:
+                    bp0 = plt.figure(...)
+                    # ...
+                    plt.show()
+                except Exception as e:
+                    st.error(f"Error during boxplot generation: {e}")
+
+                try:
+                    plt.figure(...)
+                    # ...
+                    plt.show()
+                except Exception as e:
+                    st.error(f"Error during lineplot generation: {e}")
+
+
 if list_of_transformed_dfs:
     st.subheader("Min Regret Analysis")
 
@@ -198,17 +300,6 @@ if list_of_transformed_dfs:
     #Read outputs back in for min regret analysis: (Now reading from memory)
     #############################################################################
     # No need to read from disk anymore, we use the DataFrames in memory
-
-    # Delete index column (assuming your transform_data doesn't create a new index)
-    a = S1.values
-    b = S2.values
-    c = S3.values
-    d = S4.values
-    e = S5.values
-    f = S6.values
-    g = S7.values
-    h = S8.values
-    j = S9.values
 
     # Column and row names (assuming these are consistent in your CSVs)
     column_names1 = ['V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9','V10'] # Adjust based on your actual columns
@@ -475,6 +566,8 @@ def sum_rank2(j):
     #list operations:
     ans1 = [sum_rank2(j) for j in [ScenariosT]]
     print('Scenarios all ans1', ans1)
+
+
 
     ##############################################################################
     #############   RESULTS
