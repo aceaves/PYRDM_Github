@@ -25,7 +25,9 @@ from scipy.ndimage import gaussian_filter1d
 def load_data_from_github(url):
     response = requests.get(url)
     if response.status_code == 200:
-        return pd.read_csv(io.StringIO(response.text))
+        # Determine the correct separator (e.g., comma, semicolon, tab)
+        separator = ','  # Change this if your file uses a different one
+        return pd.read_csv(io.StringIO(response.text), sep=separator)
     else:
         st.error(f"Error loading data from {url}")
         return None
