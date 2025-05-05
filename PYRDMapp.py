@@ -8,12 +8,18 @@ Created on Mon Sep 23 16:24:21 2024
 ##########  PYRDM CODE 3.0 CREATED BY ASHTON EAVES
 ##############################################################################
 
+##############################################################################
+##########  PYRDM CODE 3.0 CREATED BY ASHTON EAVES
+##############################################################################
+
 import streamlit as st
 import pandas as pd
 import numpy as np
-import pyarrow as pa
 import requests
 import io
+import os  # You'll likely still need this for path operations, though not for saving intermediate CSVs
+import matplotlib.pyplot as plt
+from scipy.ndimage import gaussian_filter1d
 
 # Function to load data from GitHub (or any predefined URL)
 def load_data_from_github(url):
@@ -23,16 +29,14 @@ def load_data_from_github(url):
     else:
         st.error(f"Error loading data from {url}")
         return None
-    
 
 st.title("🌊 PYRDM App — managed-retreat.com")
 
 # ----------------------------
-# Define thresholds and scoring logic
+# Define thresholds and scoring logic (using lambda functions)
 # ----------------------------
 
 def transform_data(df):
-    # Dictionary of transformations
     transformations = {
         'Annual Expected Loss': [
             (lambda x: x < 25_000_000, 0),
@@ -50,76 +54,74 @@ def transform_data(df):
         ],
         'hhldconsumprt': [
             (lambda x: x < 1.24, 4),
-            (lambda x: (1.24 <= x) & (x < 1.245), 3),
-            (lambda x: (1.245 <= x) & (x < 1.25), 2),
+            (lambda x: x >= 1.255, 0),
             (lambda x: (1.25 <= x) & (x < 1.255), 1),
-            (lambda x: x >= 1.255, 0)
+            (lambda x: (1.245 <= x) & (x < 1.25), 2),
+            (lambda x: (1.24 <= x) & (x < 1.245), 3)
         ],
         'unemploymentrt': [
-            (lambda x: x < 0.044, 0),
+            (lambda x: x >= 0.048, 4),
             (lambda x: (0.044 <= x) & (x < 0.045), 1),
             (lambda x: (0.045 <= x) & (x < 0.046), 2),
             (lambda x: (0.046 <= x) & (x < 0.048), 3),
-            (lambda x: x >= 0.048, 4)
+            (lambda x: x < 0.044, 0)
         ],
         'CentralG Consumption': [
             (lambda x: x >= 2200, 0),
-            (lambda x: (2000 <= x) & (x < 2200), 1),
+            (lambda x: x < 1400, 4),
             (lambda x: (1800 <= x) & (x < 2000), 2),
             (lambda x: (1400 <= x) & (x < 1800), 3),
-            (lambda x: x < 1400, 4)
+            (lambda x: (2000 <= x) & (x < 2200), 1)
         ],
         'LocalG Consumption': [
+            (lambda x: x < 200, 4),
             (lambda x: x >= 350, 0),
-            (lambda x: (300 <= x) & (x < 350), 3),
             (lambda x: (250 <= x) & (x < 300), 2),
-            (lambda x: (200 <= x) & (x < 250), 1),
-            (lambda x: x < 200, 4)
+            (lambda x: (300 <= x) & (x < 350), 3),
+            (lambda x: (200 <= x) & (x < 250), 1)
         ],
         'dtotalvalueadded': [
-            (lambda x: x >= 12500, 0),
-            (lambda x: (11000 <= x) & (x < 12500), 2),
-            (lambda x: (9500 <= x) & (x < 11000), 4),
+            (lambda x: x < 8000, 8),
             (lambda x: (8000 <= x) & (x < 9500), 6),
-            (lambda x: x < 8000, 8)
+            (lambda x: (9500 <= x) & (x < 11000), 4),
+            (lambda x: (11000 <= x) & (x < 12500), 2),
+            (lambda x: x >= 12500, 0)
         ],
         'totactualprod': [
-            (lambda x: x >= 36000, 0),
-            (lambda x: (32000 <= x) & (x < 36000), 1),
-            (lambda x: (28000 <= x) & (x < 32000), 2),
+            (lambda x: x < 24000, 4),
             (lambda x: (24000 <= x) & (x < 28000), 3),
-            (lambda x: x < 24000, 4)
+            (lambda x: (28000 <= x) & (x < 32000), 2),
+            (lambda x: (32000 <= x) & (x < 36000), 1),
+            (lambda x: x >= 36000, 0)
         ],
         'Pinvestcc': [
+            (lambda x: x >= 1.4, 4),
             (lambda x: x <= 1.05, 0),
-            (lambda x: (1.05 < x) & (x <= 1.2), 1),
-            (lambda x: (1.2 < x) & (x <= 1.3), 2),
-            (lambda x: (1.3 < x) & (x <= 1.4), 3),
-            (lambda x: x > 1.4, 4)
+            (lambda x: (1.05 < x) & (x < 1.2), 1),
+            (lambda x: (1.2 < x) & (x < 1.3), 2),
+            (lambda x: (1.3 < x) & (x < 1.4), 3)
         ],
         'Landuse ratio': [
-            (lambda x: x >= 2, 0),
-            (lambda x: (1.5 <= x) & (x < 2), 1),
-            (lambda x: (1 <= x) & (x < 1.5), 2),
+            (lambda x: x < 0.5, 4),
             (lambda x: (0.5 <= x) & (x < 1), 3),
-            (lambda x: x < 0.5, 4)
+            (lambda x: (1 <= x) & (x < 1.5), 2),
+            (lambda x: (1.5 <= x) & (x < 2), 1),
+            (lambda x: x >= 2, 0)
         ]
     }
-   
+
+    transformed_df = df.copy()
     for col, rules in transformations.items():
-        if col in df.columns:
-            new_col = col + '_transformed'
-            df[new_col] = pd.Series([np.nan] * len(df), dtype="float64")  # Use np.nan for compatibility with float64
+        if col in transformed_df.columns:
             for condition, value in rules:
-                mask = condition(df[col])
-                df.loc[mask, new_col] = float(value)  # Explicitly cast to float
-    return df
+                transformed_df.loc[condition(transformed_df[col]), col] = value
+    return transformed_df
 
 # ----------------------------
-# Upload Files
+# Load Data
 # ----------------------------
 
-st.subheader("Upload your scenario files")
+st.subheader("Load your scenario files")
 
 # Option to choose how to load data
 option = st.selectbox(
@@ -127,86 +129,344 @@ option = st.selectbox(
     ["Upload Your Own Data", "Load Data from GitHub Repo"]
 )
 
-# Load data based on selection
+list_of_transformed_dfs = []
+file_names = []
+
 if option == "Upload Your Own Data":
-    # File uploader for CSV or Excel files
-    uploaded_file = st.file_uploader("Choose a CSV file", type=["csv"])
-    
-    if uploaded_file is not None:
-        # Handle the file based on its type (CSV or Excel)
-        if uploaded_file.name.endswith('.csv'):
-            df = pd.read_csv(uploaded_file)
-        elif uploaded_file.name.endswith('.xlsx'):
-            df = pd.read_excel(uploaded_file)
-
-        st.write("Data loaded successfully!")
-        st.dataframe(df)
-
-        # Apply transformations
-        df_transformed = transform_data(df)
-        st.write("Transformed Data")
-        st.dataframe(df_transformed)
+    uploaded_files = st.file_uploader("Choose CSV files", type=["csv"], accept_multiple_files=True)
+    if uploaded_files:
+        for file in uploaded_files:
+            try:
+                df = pd.read_csv(file)
+                transformed_df = transform_data(df)
+                list_of_transformed_dfs.append(transformed_df)
+                file_names.append(file.name)
+                st.write(f"Processed: {file.name}")
+                st.dataframe(transformed_df.head()) # Show a preview
+            except Exception as e:
+                st.error(f"Error processing {file.name}: {e}")
 
 elif option == "Load Data from GitHub Repo":
-# List of GitHub URLs
+    # List of GitHub URLs for CSV files
     github_urls = [
         "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP0.csv",
         "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45.csv",
-        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45bonds.csv",
-        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45def.csv",
-        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45rates.csv",
         "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85.csv",
-        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85bonds.csv",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45def.csv",
         "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85def.csv",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45bonds.csv",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP45rates.csv",
+        "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85bonds.csv",
         "https://raw.githubusercontent.com/aceaves/PYRDM_Github/main/inputs/RCP85rates.csv"
     ]
+    github_file_names = [url.split('/')[-1] for url in github_urls]
+    selected_urls = st.multiselect("Select files from GitHub Repo", github_file_names, default=github_file_names)
 
-# Allow the user to choose which file to load from the list
-    selected_url = st.selectbox("Select the file from GitHub Repo", github_urls)
+    for url in github_urls:
+        if url.split('/')[-1] in selected_urls:
+            df = load_data_from_github(url)
+            if df is not None:
+                transformed_df = transform_data(df.copy()) # Apply transformation immediately
+                list_of_transformed_dfs.append(transformed_df)
+                file_names.append(url.split('/')[-1])
+                st.write(f"Loaded and processed: {url.split('/')[-1]}")
+                st.dataframe(transformed_df.head()) # Show a preview
 
-    df = load_data_from_github(selected_url)
-    if df is not None:
-        st.write(f"Data loaded from GitHub: {selected_url.split('/')[-1]}")
-        st.dataframe(df)
-        
-        # Apply transformations
-        df_transformed = transform_data(df)
-        st.write("Transformed Data")
-        st.dataframe(df_transformed)
+if list_of_transformed_dfs:
+    st.subheader("Min Regret Analysis")
 
-# Option to upload multiple files and process them
-uploaded_files = st.file_uploader("Upload multiple files", type="xlsx", accept_multiple_files=True)
+    # Assign the loaded and transformed DataFrames to variables (similar to your original code)
+    S1, S2, S3, S4, S5, S6, S7, S8, S9 = list_of_transformed_dfs
 
-if uploaded_files:
-    dfs = []
-    for file in uploaded_files:
-        df = pd.read_excel(file)
-        st.write(f"**{file.name}** loaded with {df.shape[0]} rows.")
-        
-        # Explicitly convert all columns to float64, ignoring errors
-        df = df.apply(pd.to_numeric, errors='coerce', axis=0)
+    ##############################################################################
+    #Loop through files, classify and index:
+    ##############################################################################
+    list_of_dfs = [S1, S2, S3, S4, S5, S6, S7, S8, S9]
 
-        # Check for columns that may have an unsupported dtype (e.g., datetime)
-        for col in df.columns:
-            if df[col].dtype == 'object':  # This includes datetime or string columns
-                df[col] = df[col].astype('str')  # Convert to string if not numeric
+    ##############################################################################
+    # The conditional statements are now within the transform_data function
+    ##############################################################################
 
-        # Ensure that all columns are float64 where possible
-        df = df.astype('float64', errors='ignore')
+    #############################################################################
+    #Read outputs back in for min regret analysis: (Now reading from memory)
+    #############################################################################
+    # No need to read from disk anymore, we use the DataFrames in memory
 
-        # Transform data according to the rules
-        df_transformed = transform_data(df)
-        dfs.append(df_transformed)
+    # Delete index column (assuming your transform_data doesn't create a new index)
+    a = S1.values
+    b = S2.values
+    c = S3.values
+    d = S4.values
+    e = S5.values
+    f = S6.values
+    g = S7.values
+    h = S8.values
+    j = S9.values
 
-    st.success(f"✅ Processed {len(dfs)} files.")
+    # Column and row names (assuming these are consistent in your CSVs)
+    column_names1 = ['V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9','V10'] # Adjust based on your actual columns
+    row_names1  = ['2020','2020.25','2020.5','2020.75','2021','2021.25','2021.5','2021.75','2022',
+                   '2022.25','2022.5','2022.75','2023','2023.25','2023.5','2023.75','2024',
+                   '2024.25','2024.5','2024.75','2025','2025.25','2025.5','2025.75','2026',
+                   '2026.25','2026.5','2026.75','2027','2027.25','2027.5','2027.75','2028',
+                   '2028.25','2028.5','2028.75','2029','2029.25','2029.5','2029.75','2030',
+                   '2030.25','2030.5','2030.75','2031','2031.25','2031.5','2031.75','2032',
+                   '2032.25','2032.5','2032.75','2033','2033.25','2033.5','2033.75','2034',
+                   '2034.25','2034.5','2034.75','2035','2035.25','2035.5','2035.75','2036',
+                   '2036.25','2036.5','2036.75','2037','2037.25','2037.5','2037.75','2038',
+                   '2038.25','2038.5','2038.75','2039','2039.25','2039.5','2039.75','2040',
+                   '2040.25','2040.5','2040.75','2041','2041.25','2041.5','2041.75','2042',
+                   '2042.25','2042.5','2042.75','2043','2043.25','2043.5','2043.75','2044',
+                   '2044.25','2044.5','2044.75','2045','2045.25','2045.5','2045.75','2046',
+                   '2046.25','2046.5','2046.75','2047','2047.25','2047.5','2047.75','2048',
+                   '2048.25','2048.5','2048.75','2049','2049.25','2049.5','2049.75','2050',
+                   'sum','rank']
+    column_names2 = ['V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9','V10' ,'sum','rank'] # Adjust
+    row_names2    = ['2020','2020.25','2020.5','2020.75','2021','2021.25','2021.5','2021.75','2022',
+                     '2022.25','2022.5','2022.75','2023','2023.25','2023.5','2023.75','2024',
+                     '2024.25','2024.5','2024.75','2025','2025.25','2025.5','2025.75','2026',
+                     '2026.25','2026.5','2026.75','2027','2027.25','2027.5','2027.75','2028',
+                     '2028.25','2028.5','2028.75','2029','2029.25','2029.5','2029.75','2030',
+                     '2030.25','2030.5','2030.75','2031','2031.25','2031.5','2031.75','2032',
+                     '2032.25','2032.5','2032.75','2033','2033.25','2033.5','2033.75','2034',
+                     '2034.25','2034.5','2034.75','2035','2035.25','2035.5','2035.75','2036',
+                     '2036.25','2036.5','2036.75','2037','2037.25','2037.5','2037.75','2038',
+                     '2038.25','2038.5','2038.75','2039','2039.25','2039.5','2039.75','2040',
+                     '2040.25','2040.5','2040.75','2041','2041.25','2041.5','2041.75','2042',
+                     '2042.25','2042.5','2042.75','2043','2043.25','2043.5','2043.75','2044',
+                     '2044.25','2044.5','2044.75','2045','2045.25','2045.5','2045.75','2046',
+                     '2046.25','2046.5','2046.75','2047','2047.25','2047.5','2047.75','2048',
+                     '2048.25','2048.5','2048.75','2049','2049.25','2049.5','2049.75','2050']
+    #Column and row names for scenarios:
+    column_names3 = ['RCP0', 'RCP45', 'RCP8.5', 'RCP4.5 Defence', 'RCP8.5 Defence','RCP4.5 Bonds',
+                     'RCP4.5 Rates', 'RCP8.5 Bonds', 'RCP8.5 Rates']
+    column_names4 = ['RCP0', 'RCP4.5', 'RCP8.5', 'RCP4.5 Defence', 'RCP8.5 Defence','RCP4.5 Bonds',
+                     'RCP4.5 Rates', 'RCP8.5 Bonds', 'RCP8.5 Rates','sum','rank']
+    #Scenario names:
+    #labels = ['RCP0', 'RCP4.5', 'RCP8.5', 'RCP4.5 Defence', 'RCP8.5 Defence', 'RCP4.5 Bonds', 
+    #          'RCP4.5 Rates', 'RCP8.5 Bonds', 'RCP8.5 Rates']
+    labels = ['1. No SLR', '2. Baseline', '3. Worst-case baseline', '4. Defend', 
+              '5. Worst-case defend', '6. Managed retreat bonds', '7. Managed retreat rates', 
+              '8. Worst-case managed retreat bonds', '9. Worst-case managed retreat rates']
+    ##############################################################################
+    #Condensed Min Regret Matrix:
+    ##############################################################################
+    def sum_rank(i):
+        #difference or least regret between variables and scenarios:
+        p = np.array(i)
+        q = np.min(p,axis=0)
+        r = np.min(p,axis=1)
+        cdif = p-q
+        rdif = p-r[:,None]
+        #find the sum of the rows and columns for the difference arrays:
+        sumc = np.sum(cdif,axis=0)
+        sumr = np.sum(rdif,axis=1)
+        sumra = np.reshape(sumr,(121,1))
+        #append the scenario array with the column sums:
+        sumcol = np.zeros((122,10))
+        sumcol = np.append([cdif],[sumc])
+        sumcol.shape = (122,10)
+        #rank columns:
+        order0 = sumc.argsort()
+        rank0 = order0.argsort()
+        rankcol = np.zeros((123,10))
+        rankcol = np.append([sumcol],[rank0])
+        rankcol.shape = (123,10)
+        #append the variable array with row sums:
+        sumrow = np.zeros((121,11))
+        sumrow = np.hstack((rdif,sumra))
+        #rank rows:
+        order1 = sumr.argsort()
+        rank1 = order1.argsort()
+        rank1r = np.reshape(rank1,(121,1))
+        rankrow = np.zeros((121,12))
+        rankrow = np.hstack((sumrow,rank1r))
+        #Add row and column headers for least regret for df0:
+        table1 = np.zeros((124,11))
+        table1 = pd.DataFrame(rankcol, columns=column_names1, index=row_names1)
+        #Add row and column headers for least regret for df1:
+        table2 = np.zeros((122,13))
+        table2 = pd.DataFrame(rankrow, columns=column_names2, index=row_names2)
+        return table1, table2
+    #list operations:
+    ans = [sum_rank(i) for i in [a,b,c,d,e,f,g,h,j]]
+    print(ans)
+    #Variable ouput arrays (use ans[0][0][0] to query index).
+    #Syntax for internal array = A[start_index_row : stop_index_row, 
+        #start_index_columnn : stop_index_column)]
+    ans_output = pd.DataFrame(ans)
+    ans_output.to_csv('./outputs/ans_output.csv')
 
-    # Show a preview
-    with st.expander("Preview First File (Transformed)"):
-        st.dataframe(dfs[0])
+    ##############################################################################
+    #Min scenarios and timesteps across all variables:
+    ##############################################################################  
+    #Sum variables into one column:   
+    S_RCP0_B_all = ans[0][1].iloc[:,-2]
+    S_RCP45_B_all = ans[1][1].iloc[:,-2]
+    S_RCP85_B_all = ans[2][1].iloc[:,-2]
+    S_RCP45_def = ans[3][1].iloc[:,-2]
+    S_RCP45_def = ans[4][1].iloc[:,-2]
+    S_RCP85_bonds_all = ans[5][1].iloc[:,-2]
+    S_RCP85_rates_all = ans[6][1].iloc[:,-2]
+    S_RCP85_bonds_all = ans[7][1].iloc[:,-2]
+    S_RCP85_rates_all = ans[8][1].iloc[:,-2]
+    #Append scenarios into one matrix:
+    Scenarios = []
+    Scenarios.append((ans[0][1].iloc[:,-2]))
+    Scenarios.append((ans[1][1].iloc[:,-2]))
+    Scenarios.append((ans[2][1].iloc[:,-2]))
+    Scenarios.append((ans[3][1].iloc[:,-2]))
+    Scenarios.append((ans[4][1].iloc[:,-2]))
+    Scenarios.append((ans[5][1].iloc[:,-2]))
+    Scenarios.append((ans[6][1].iloc[:,-2]))
+    Scenarios.append((ans[7][1].iloc[:,-2]))
+    Scenarios.append((ans[8][1].iloc[:,-2]))
+    Scenarios = np.array(Scenarios)
+    Scenarios.flatten()
+    ScenariosT = np.transpose(Scenarios)
+    #print('ScenariosT:', ScenariosT)
+    #print(ScenariosT.shape)
+    #Create least-regret matrix on scenarios and timesteps:  
+    def sum_rank2(j):
+        s = np.array(j)
+        t = np.min(s,axis=0)
+        u = np.min(s,axis=1)
+        tdif = s-t
+        udif = s-u[:,None]
+        add_zeros2 = np.zeros((2,1))
+        #find the sum of the rows and columns for the difference arrays:
+        sums = np.sum(tdif,axis=0)
+        print('sums',sums)
+        sumt = np.sum(udif,axis=1)
+        print('sumt',sumt)
+        sumv = np.sum(udif,axis=0)
+        print('sumv',sumv)
+        sumw = np.sum(tdif,axis=1)
+        print('sumw',sumw)
+        sums_reshape = np.append([sums],[add_zeros2])
+        sumt_reshape = np.reshape(sumt,(121,1))
+        sumw_reshape = np.reshape(sumw,(121,1))
+        sumw_reshape2 = np.zeros((122,1))
+        sumw_reshape2 = np.append([sumw_reshape],[add_zeros2])
+        sumv_reshape = np.append([sumv],[add_zeros2])
+        #append the scenario array with the column sums:
+        sumcolj = np.zeros((121,10))
+        sumcolj = np.append([tdif],[sumw])
+        sumcolj.shape = (121,10)
+         #rank columns:
+        orderj = sums.argsort()
+        orderj2 = sumv.argsort()
+        rankj = orderj.argsort()
+        rankj2 = orderj2.argsort()
+        rankj2_reshape = np.append([rankj2],[add_zeros2])
+        #append the array with row sums
+        sumrowj = np.zeros((121,10))
+        sumrowj = np.hstack((udif,sumt_reshape))
+        sumrowj2 = np.zeros((121,10))
+        sumrowj2 = np.hstack((tdif,sumw_reshape))
+        #rank rows
+        order1j = sumt.argsort()
+        rank1j = order1j.argsort()
+        rank1j = np.reshape(rank1j,(121,1))
+        order2j = sumv.argsort()
+        rank2j = order2j.argsort()
+        rank2j = np.reshape(rank2j,(9,1))
+        #append the array with row sums
+        rankrowj = np.zeros((121,11))
+        rankrowj = np.hstack((sumrowj,rank1j))
+        rankrowj2 = np.zeros((122,11))
+        rankrowj2 = np.append([rankrowj],[sumv_reshape])  
+        #Add alternative summation of rows and columns:
+        sumcolj2 = np.zeros((121,11))
+        sumcolj2 = np.append([sumcolj],[rank1j])
+        rankcolj2 = np.zeros((122,11))
+        rankcolj2 = np.append(sumcolj2,sums_reshape)
+        rankcolj3 = np.zeros((123,11))
+        rankcolj3 = np.append(rankcolj2,rankj2_reshape)
+        rankcolj3_reshape = np.reshape(rankcolj3,(123,11))
+        #Add alternative summation of rows and columns:   
+        rank2j2 = np.append([rank2j],[add_zeros2])    
+        rankrowj3 = np.zeros((123,11))
+        rankrowj3 = np.append([rankrowj2],[rank2j2])
+        rankrowj3_reshape = np.reshape(rankrowj3,(123,11))   
+        #Add row and column headers for least regret for df0:
+        table0 = np.zeros((123,11))
+        table0 = pd.DataFrame(rankcolj3_reshape, columns=column_names4, index=row_names1)
+        #Add row and column headers for least regret for df1:
+        table1 = np.zeros((123,11))
+        table1 = pd.DataFrame(rankrowj3_reshape, columns=column_names4, index=row_names1)
+        return table0, table1
+    #list operations:
+    ans1 = [sum_rank2(j) for j in [ScenariosT]]
+    print('Scenarios all ans1', ans1)
 
-else:
-    st.info("Please upload your Excel files to begin.")
-    
-    
-##############################################################################
-##############################################################################
+    ##############################################################################
+    #############   RESULTS
+    ##############################################################################
+
+    #Best timestep across all scenarios:
+    #############################################################################  
+    print(ans1[0][0][:-2])
+    ans1_output = pd.DataFrame(ans1[0][0][:])
+    ans2 = pd.DataFrame(ans1[0][1][:])
+    print('ans2', ans2)
+    ans2.to_csv('./outputs/ans2_output.csv')
+    #Transpose list for plot on first dataframe:
+    ans3 = pd.DataFrame.transpose(ans1[0][0].iloc[:-2,0:9])
+    #Transpose list for plot on second dataframe:
+    ans4 = pd.DataFrame.transpose(ans1[0][1].iloc[:-2,0:9])
+    #Min scenario value by index
+    print('Scenario rank:', ans1[0][0][-1:])
+    ans1[0][0][-1:].to_csv('./outputs/rank_output.csv')
+
+    #Scenario boxplot for all timesteps (ans4):
+    bp0=plt.figure(figsize=(12, 10), dpi= 80, facecolor='lightgrey', edgecolor='k')
+    bp0=plt.boxplot(ans4,patch_artist=True, showmeans=True)
+    #fill with colors
+    #colors = ['lightcyan', 'paleturquoise', 'aquamarine', 'turquoise', 'mediumturquoise',
+    #          'lightseagreen', 'teal', 'darkslategrey', 'black']
+    colors = ['blue', 'black', 'lightgrey', 'mediumorchid', 'mediumorchid',
+              'sandybrown', 'yellowgreen', 'sandybrown', 'yellowgreen']
+    for patch, color in zip(bp0['boxes'], colors):
+        patch.set_facecolor(color)
+    plt.yticks(fontsize=14)
+    plt.xticks([1, 2, 3, 4, 5, 6, 7, 8, 9], ['1. No SLR', '2. Baseline', 
+               '3. Worst-case baseline', '4. Defend', '5. Worst-case defend', 
+               '6. Managed retreat bonds', '7. Managed retreat rates', 
+              '8. Worst-case bonds', '9. Worst-case rates'], 
+        rotation=30, fontsize=14)
+    #plt.title('BOXPLOT OF SCENARIOS ACROSS ALL TIMESTEPS', fontsize=16, color='navy')
+    plt.xlabel('Scenario', fontsize=16, color='black')
+    plt.ylabel('Minimum regret (Deviation from ideal scenario)', fontsize=16, color='black')
+    plt.grid(color='lightgrey', linestyle='-', linewidth=0.3)
+    plt.tight_layout()
+    plt.show()
+
+    ##############################################################################
+    #Best scenario across all timesteps
+    ##############################################################################
+    #Min timestep (index) value by scenarios:
+    print('Timestep rank:', ans1[0][0].iloc[:-2,-2])
+
+    #lineplot by scenario for all timesteps  
+    plt.figure(figsize=(20, 10), dpi= 80, facecolor='lightgrey', edgecolor='k')
+    ysmoothed = gaussian_filter1d(ans1[0][1].iloc[:-2,:-2], sigma=2.3)
+    plt.plot(ysmoothed)
+    np.savetxt('./outputs/ysmoothed_output.csv', ysmoothed, delimiter=",")
+
+
+    #plt.plot(ans1[0][1].iloc[:-2,:-2])
+    print(ans1[0][1].iloc[:-2,:-2])
+    plt.yticks(fontsize=14)
+    plt.xticks([0, 20, 40, 60, 80, 100, 120], ['2020', '2025', '2030', '2035', '2040', '2045', '2050']
+        , rotation=30, fontsize=14)
+    plt.title('LINE GRAPH OF SCENARIOS BY TIMESTEP', fontsize=16, color='black')
+    plt.xlabel('YEAR', fontsize=16, color='black')
+    plt.ylabel('MINIMUM REGRET (Deviation from ideal scenario)', fontsize=16, color='black')
+    lg = plt.legend(labels, title='SCENARIOS', fontsize=16)
+    title = lg.get_title()
+    title.set_fontsize(14)
+    plt.grid(color='lightgrey', linestyle='-', linewidth=0.3)
+    plt.show()
+    ##############################################################################
+    ##############################################################################
