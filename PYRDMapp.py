@@ -539,29 +539,27 @@ def sum_rank2(j):
     except Exception as e:
         st.error(f"Error in sum_rank function: {e}")
 
-    ScenariosT = None  # Initialize ScenariosT to None
+    ScenariosT = None  # Initialize to None
+
     if ans:
         try:
             Scenarios = []
-            Scenarios.append((ans[0][1].iloc[:, -2]))
-            Scenarios.append((ans[1][1].iloc[:, -2]))
-            Scenarios.append((ans[2][1].iloc[:, -2]))
-            Scenarios.append((ans[3][1].iloc[:, -2]))
-            Scenarios.append((ans[4][1].iloc[:, -2]))
-            Scenarios.append((ans[5][1].iloc[:, -2]))
-            Scenarios.append((ans[6][1].iloc[:, -2]))
-            Scenarios.append((ans[7][1].iloc[:, -2]))
-            Scenarios.append((ans[8][1].iloc[:, -2]))
-            Scenarios = np.array(Scenarios)
-            Scenarios.flatten()
-            ScenariosT = np.transpose(Scenarios)
-            print(f"Shape of ScenariosT: {ScenariosT.shape if ScenariosT is not None else None}")
-            print(f"First few rows of ScenariosT:\n{ScenariosT[:5] if ScenariosT is not None and len(ScenariosT) > 5 else None}")
-            ans1 = [sum_rank2(j) for j in [ScenariosT]]
-            print('Scenarios all ans1', ans1)
+            for i in range(len(a)):
+                Scenarios.append([a[i][0], b[i][0], c[i][0], d[i][0], e[i][0], f[i][0], g[i][0], h[i][0], j[i][0]])
+
+            Scenarios = np.array(Scenarios)           # Shape: (N, 9)
+            ScenariosT = np.transpose(Scenarios)      # Shape: (9, N)
+
+            print(f"Shape of ScenariosT: {ScenariosT.shape}")
+            print(f"First few rows of ScenariosT:\n{ScenariosT[:, :5]}")  # Print first 5 columns
+
+            ans1 = [sum_rank2(ScenariosT)]
+            print('Scenarios all ans1:', ans1)
+
         except Exception as e:
             st.error(f"Error in the Min Regret Analysis (after sum_rank): {e}")
             ans1 = None
+
             
     #list operations:
     ans1 = [sum_rank2(j) for j in [ScenariosT]]
@@ -572,6 +570,9 @@ def sum_rank2(j):
     ##############################################################################
     #############   RESULTS
     ##############################################################################
+
+    st.write("Scenarios shape:", ScenariosT.shape)
+    st.write("ans1 output:", ans1)
 
     #Best timestep across all scenarios:
     #############################################################################  
@@ -607,7 +608,7 @@ def sum_rank2(j):
     plt.ylabel('Minimum regret (Deviation from ideal scenario)', fontsize=16, color='black')
     plt.grid(color='lightgrey', linestyle='-', linewidth=0.3)
     plt.tight_layout()
-    plt.show()
+    st.pyplot(bp0)
 
     ##############################################################################
     #Best scenario across all timesteps
@@ -632,6 +633,6 @@ def sum_rank2(j):
     title = lg.get_title()
     title.set_fontsize(14)
     plt.grid(color='lightgrey', linestyle='-', linewidth=0.3)
-    plt.show()
+    st.pyplot(ysmoothed)
     ##############################################################################
     ##############################################################################
