@@ -215,8 +215,8 @@ if list_of_transformed_dfs:
             ans = [sum_rank(i) for i in [a,b,c,d,e,f,g,h,j]]
             st.write(f"Shape of ans: {len(ans) if ans else None}, type of ans[0]: {type(ans[0]) if ans and ans[0] else None}")
             print(ans)
-        except Exception as e:
-            st.error(f"Error in sum_rank function: {e}")
+        except Exception as n:
+            st.error(f"Error in sum_rank function: {n}")
             ans = None
 
         if ans:
@@ -229,8 +229,8 @@ if list_of_transformed_dfs:
                 ans1 = [sum_rank2(j) for j in [ScenariosT]]
                 st.write(f"Shape of ans1: {len(ans1) if ans1 else None}, type of ans1[0]: {type(ans1[0]) if ans1 and ans1[0] else None}")
                 print('Scenarios all ans1', ans1)
-            except Exception as e:
-                st.error(f"Error in the Min Regret Analysis (after sum_rank): {e}")
+            except Exception as n:
+                st.error(f"Error in the Min Regret Analysis (after sum_rank): {n}")
                 ans1 = None
 
             if ans1:
@@ -245,8 +245,8 @@ if list_of_transformed_dfs:
             ans = [sum_rank(i) for i in [a,b,c,d,e,f,g,h,j]]
             st.write(f"Shape of ans: {len(ans) if ans else None}, type of ans[0]: {type(ans[0]) if ans and ans[0] else None}")
             print(ans)
-        except Exception as e:
-            st.error(f"Error in sum_rank function: {e}")
+        except Exception as n:
+            st.error(f"Error in sum_rank function: {n}")
             ans = None
 
         if ans:
@@ -260,8 +260,8 @@ if list_of_transformed_dfs:
                 ans1 = [sum_rank2(j) for j in [ScenariosT]]
                 st.write(f"Shape of ans1: {len(ans1) if ans1 else None}, type of ans1[0]: {type(ans1[0]) if ans1 and ans1[0] else None}")
                 print('Scenarios all ans1', ans1)
-            except Exception as e:
-                st.error(f"Error in the Min Regret Analysis (after sum_rank): {e}")
+            except Exception as n:
+                st.error(f"Error in the Min Regret Analysis (after sum_rank): {n}")
                 ans1 = None
 
             if ans1:
@@ -270,15 +270,15 @@ if list_of_transformed_dfs:
                     bp0 = plt.figure(...)
                     # ...
                     plt.show()
-                except Exception as e:
-                    st.error(f"Error during boxplot generation: {e}")
+                except Exception as n:
+                    st.error(f"Error during boxplot generation: {n}")
 
                 try:
                     plt.figure(...)
                     # ...
                     plt.show()
-                except Exception as e:
-                    st.error(f"Error during lineplot generation: {e}")
+                except Exception as n:
+                    st.error(f"Error during lineplot generation: {n}")
 
 
 if list_of_transformed_dfs:
@@ -292,14 +292,9 @@ if list_of_transformed_dfs:
     ##############################################################################
     list_of_dfs = [S1, S2, S3, S4, S5, S6, S7, S8, S9]
 
-    ##############################################################################
-    # The conditional statements are now within the transform_data function
-    ##############################################################################
-
     #############################################################################
     #Read outputs back in for min regret analysis: (Now reading from memory)
     #############################################################################
-    # No need to read from disk anymore, we use the DataFrames in memory
 
     # Column and row names (assuming these are consistent in your CSVs)
     column_names1 = ['V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9','V10'] # Adjust based on your actual columns
@@ -346,59 +341,42 @@ if list_of_transformed_dfs:
     labels = ['1. No SLR', '2. Baseline', '3. Worst-case baseline', '4. Defend', 
               '5. Worst-case defend', '6. Managed retreat bonds', '7. Managed retreat rates', 
               '8. Worst-case managed retreat bonds', '9. Worst-case managed retreat rates']
+    
     ##############################################################################
     #Condensed Min Regret Matrix:
     ##############################################################################
-def sum_rank(i):
-    #difference or least regret between variables and scenarios:
-    p = np.array(i)
-    num_rows, num_cols = p.shape
+def sum_rank2(data):
+    try:
+        n_rows, n_cols = data.shape
 
-    q = np.min(p, axis=0)
-    r = np.min(p, axis=1)
-    cdif = p - q
-    rdif = p - r[:, None]
+        # Rank each row (horizontally)
+        row_sort_order = np.argsort(data, axis=1)
+        row_ranks = np.argsort(row_sort_order, axis=1) + 1  # Add 1 for 1-based rank
 
-    #find the sum of the rows and columns for the difference arrays:
-    sumc = np.sum(cdif, axis=0)
-    sumr = np.sum(rdif, axis=1)
-    sumra = np.reshape(sumr, (num_rows, 1))
+        # Rank each column (vertically)
+        col_sort_order = np.argsort(data, axis=0)
+        col_ranks = np.argsort(col_sort_order, axis=0) + 1
 
-    #append the scenario array with the column sums:
-    sumcol = np.zeros((num_rows + 1, num_cols))
-    sumcol[:-1, :] = cdif  # Assign cdif to the first num_rows rows
-    sumcol[-1, :] = sumc   # Assign sumc to the last row
+        # Initialize matrices to store ranks with total row/column ranks
+        rank_matrix_rows = np.zeros((n_rows, n_cols + 1), dtype=int)  # last col = row total
+        rank_matrix_cols = np.zeros((n_rows + 1, n_cols), dtype=int)  # last row = col total
 
-    #rank columns:
-    order0 = sumc.argsort()
-    rank0 = order0.argsort()
-    rankcol = np.zeros((num_rows + 2, num_cols))
-    rankcol[:-2, :] = sumcol[:-1, :] # Assign sumcol (excluding last row)
-    rankcol[-2, :] = sumcol[-1, :]  # Assign the sum of columns
-    rankcol[-1, :] = rank0          # Assign the rank of columns
+        rank_matrix_rows[:, :n_cols] = row_ranks
+        rank_matrix_cols[:n_rows, :] = col_ranks
 
-    #append the variable array with row sums:
-    sumrow = np.zeros((num_rows, num_cols + 1))
-    sumrow[:, :-1] = rdif # Assign rdif to all rows, excluding the last column
-    sumrow[:, -1] = sumr  # Assign sumr to the last column
+        # Compute sums of ranks for each row and column
+        rank_matrix_rows[:, -1] = np.sum(row_ranks, axis=1)  # Row-wise totals
+        rank_matrix_cols[-1, :] = np.sum(col_ranks, axis=0)  # Column-wise totals
 
-    #rank rows:
-    order1 = sumr.argsort()
-    rank1 = order1.argsort()
-    rank1r = np.reshape(rank1, (num_rows, 1))
-    rankrow = np.zeros((num_rows, num_cols + 2))
-    rankrow[:, :-2] = sumrow[:, :-1] # Assign sumrow (excluding last two columns)
-    rankrow[:, -2] = sumrow[:, -1]  # Assign the sum of rows
-    rankrow[:, -1] = rank1r.flatten() # Assign the rank of rows
+        # Total ranks = row total + column total
+        total_ranks = rank_matrix_rows[:, -1] + rank_matrix_cols[-1, :]
 
-    #Add row and column headers for least regret for df0:
-    table1 = pd.DataFrame(rankcol, columns=column_names1, index=row_names1 + ['sum', 'rank'])
+        return total_ranks
 
-    #Add row and column headers for least regret for df1:
-    table2 = pd.DataFrame(rankrow, columns=column_names2, index=row_names2)
+    except Exception as e:
+        print(f"Error in sum_rank2 function: {e}")
+        return None
 
-    return table1, table2
-    
 
     #list operations:
     ans = [sum_rank(i) for i in [a,b,c,d,e,f,g,h,j]]
@@ -437,100 +415,105 @@ def sum_rank(i):
     ScenariosT = np.transpose(Scenarios)
     #print('ScenariosT:', ScenariosT)
     #print(ScenariosT.shape)
-    #Create least-regret matrix on scenarios and timesteps:  
+    
+    
+#Create least-regret matrix on scenarios and timesteps:  
 def sum_rank2(j):
-    s = np.array(j)
-    num_rows, num_cols = s.shape
+    try:
+        s = np.array(j)
+        num_rows, num_cols = s.shape
 
-    t = np.min(s, axis=0)
-    u = np.min(s, axis=1)
-    tdif = s - t
-    udif = s - u[:, None]
-    add_zeros2 = np.zeros((2, 1))  # This still seems hardcoded, consider its purpose
+        t = np.min(s, axis=0)
+        u = np.min(s, axis=1)
 
-    #find the sum of the rows and columns for the difference arrays:
-    sums = np.sum(tdif, axis=0)
-    print('sums shape:', sums.shape)
-    sumt = np.sum(udif, axis=1)
-    print('sumt shape:', sumt.shape)
-    sumv = np.sum(udif, axis=0)
-    print('sumv shape:', sumv.shape)
-    sumw = np.sum(tdif, axis=1)
-    print('sumw shape:', sumw.shape)
+        tdif = s - t  # Regret matrix (min in column)
+        udif = s - u[:, None]  # Regret matrix (min in row)
 
-    sums_reshape = np.append([sums], [add_zeros2], axis=0) # Ensure correct appending
-    sumt_reshape = np.reshape(sumt, (num_rows, 1))
-    sumw_reshape = np.reshape(sumw, (num_rows, 1))
-    sumw_reshape2 = np.zeros((num_rows + 1, 1))
-    sumw_reshape2[:-1, :] = sumw_reshape
-    sumw_reshape2[-1, :] = add_zeros2[0, 0] # Assign a single zero
-    sumv_reshape = np.append([sumv], [add_zeros2], axis=0) # Ensure correct appending
+        add_zeros2 = np.zeros((2, 1))  # Used for padding later
 
-    #append the scenario array with the column sums:
-    sumcolj = np.zeros((num_rows, num_cols))
-    sumcolj[:, :] = tdif # Assign directly
-    sumcolj = np.vstack((sumcolj, sumw)) # Stack along rows
+        # Step 1: Compute sums
+        sums = np.sum(tdif, axis=0)   # Sum of columns (tdif)
+        sumt = np.sum(udif, axis=1)   # Sum of rows (udif)
+        sumv = np.sum(udif, axis=0)   # Sum of columns (udif)
+        sumw = np.sum(tdif, axis=1)   # Sum of rows (tdif)
 
-    #rank columns:
-    orderj = sums.argsort()
-    orderj2 = sumv.argsort()
-    rankj = orderj.argsort()
-    rankj2 = orderj2.argsort()
-    rankj2_reshape = np.append([rankj2], [add_zeros2], axis=0) # Ensure correct appending
+        # Step 2: Reshape for appending
+        sums_reshape = np.append([sums], [add_zeros2.flatten()], axis=0)
+        sumt_reshape = sumt.reshape((num_rows, 1))
+        sumw_reshape = sumw.reshape((num_rows, 1))
 
-    #append the array with row sums
-    sumrowj = np.zeros((num_rows, num_cols))
-    sumrowj[:, :] = udif # Assign directly
-    sumrowj = np.hstack((sumrowj, sumt_reshape)) # Stack along columns
-    sumrowj2 = np.zeros((num_rows, num_cols))
-    sumrowj2[:, :] = tdif # Assign directly
-    sumrowj2 = np.hstack((sumrowj2, sumw_reshape)) # Stack along columns
+        sumw_reshape2 = np.zeros((num_rows + 1, 1))
+        sumw_reshape2[:-1, :] = sumw_reshape
+        sumw_reshape2[-1, :] = 0  # Just append a zero
 
-    #rank rows
-    order1j = sumt.argsort()
-    rank1j = order1j.argsort()
-    rank1j = np.reshape(rank1j, (num_rows, 1))
-    order2j = sumv.argsort()
-    rank2j = order2j.argsort()
-    rank2j = np.reshape(rank2j, (num_cols -1, 1)) # Adjust based on sumv's length
+        sumv_reshape = np.append([sumv], [add_zeros2.flatten()], axis=0)
 
-    #append the array with row sums
-    rankrowj = np.zeros((num_rows, num_cols + 1))
-    rankrowj[:, :-1] = sumrowj[:, :-1]
-    rankrowj[:, -1] = sumrowj[:, -1].flatten()
-    rankrowj2 = np.zeros((num_rows + 1, num_cols + 1))
-    rankrowj2[:-1, :] = rankrowj
-    rankrowj2[-1, :-1] = sumv_reshape[:-1].flatten() # Assign sumv (excluding last)
-    rankrowj2[-1, -1] = sumv_reshape[-1].flatten() # Assign the last element of sumv
+        # Step 3: Build augmented matrices
+        sumcolj = np.vstack((tdif, sumw))  # Add row sum (tdif)
 
-    #Add alternative summation of rows and columns:
-    sumcolj2 = np.zeros((num_rows, num_cols + 1))
-    sumcolj2[:, :-1] = sumcolj[:-1, :]
-    sumcolj2[:, -1:] = rank1j
-    rankcolj2 = np.zeros((num_rows + 1, num_cols + 1))
-    rankcolj2[:-1, :] = sumcolj2
-    rankcolj2[-1, :] = sums_reshape.flatten()
-    rankcolj3 = np.zeros((num_rows + 2, num_cols + 1))
-    rankcolj3[:-1, :] = rankcolj2
-    rankcolj3[-1, :-1] = rankj2_reshape[:-1].flatten() # Assign rankj2 (excluding last)
-    rankcolj3[-1, -1] = rankj2_reshape[-1].flatten() # Assign last of rankj2
-    rankcolj3_reshape = np.reshape(rankcolj3, (num_rows + 2, num_cols + 1))
+        # Step 4: Column ranking
+        orderj = sums.argsort()
+        orderj2 = sumv.argsort()
+        rankj = orderj.argsort()
+        rankj2 = orderj2.argsort()
+        rankj2_reshape = np.append([rankj2], [add_zeros2.flatten()], axis=0)
 
-    #Add alternative summation of rows and columns:
-    rank2j2 = np.append([rank2j], [add_zeros2[:rank2j.shape[0]]], axis=0) # Adjust zeros
-    rankrowj3 = np.zeros((num_rows + 1, num_cols + 1))
-    rankrowj3[:-1, :] = rankrowj2
-    rankrowj3[-1, :-1] = rank2j2[:-1].flatten() # Assign rank2j (excluding last)
-    rankrowj3[-1, -1] = rank2j2[-1].flatten() # Assign last of rank2j
-    rankrowj3_reshape = np.reshape(rankrowj3, (num_rows + 1, num_cols + 1))
+        # Step 5: Row matrices
+        sumrowj = np.hstack((udif, sumt_reshape))
+        sumrowj2 = np.hstack((tdif, sumw_reshape))
 
-    #Add row and column headers for least regret for df0:
-    table0 = pd.DataFrame(rankcolj3_reshape, columns=column_names4, index=row_names1 + ['sum_col', 'rank_col'])
+        # Step 6: Row ranking
+        order1j = sumt.argsort()
+        rank1j = order1j.argsort().reshape((num_rows, 1))
 
-    #Add row and column headers for least regret for df1:
-    table1 = pd.DataFrame(rankrowj3_reshape, columns=column_names4, index=row_names1 + ['sum_row'])
+        order2j = sumv.argsort()
+        rank2j = order2j.argsort().reshape((num_cols - 1, 1))
 
-    return table0, table1
+        # Step 7: Final row and column rank matrices
+        rankrowj = np.zeros((num_rows, num_cols + 1))
+        rankrowj[:, :-1] = sumrowj[:, :-1]
+        rankrowj[:, -1] = sumrowj[:, -1]
+
+        rankrowj2 = np.zeros((num_rows + 1, num_cols + 1))
+        rankrowj2[:-1, :] = rankrowj
+        rankrowj2[-1, :-1] = sumv_reshape[:-1]
+        rankrowj2[-1, -1] = sumv_reshape[-1]
+
+        sumcolj2 = np.zeros((num_rows, num_cols + 1))
+        sumcolj2[:, :-1] = sumcolj[:-1, :]
+        sumcolj2[:, -1:] = rank1j
+
+        rankcolj2 = np.zeros((num_rows + 1, num_cols + 1))
+        rankcolj2[:-1, :] = sumcolj2
+        rankcolj2[-1, :] = sums_reshape.flatten()
+
+        rankcolj3 = np.zeros((num_rows + 2, num_cols + 1))
+        rankcolj3[:-1, :] = rankcolj2
+        rankcolj3[-1, :-1] = rankj2_reshape[:-1]
+        rankcolj3[-1, -1] = rankj2_reshape[-1]
+
+        rankcolj3_reshape = rankcolj3.reshape((num_rows + 2, num_cols + 1))
+
+        # Final row ranking matrix
+        rank2j2 = np.append([rank2j], [np.zeros_like(rank2j)], axis=0)
+
+        rankrowj3 = np.zeros((num_rows + 1, num_cols + 1))
+        rankrowj3[:-1, :] = rankrowj2
+        rankrowj3[-1, :-1] = rank2j2[:-1].flatten()
+        rankrowj3[-1, -1] = rank2j2[-1].flatten()
+
+        rankrowj3_reshape = rankrowj3.reshape((num_rows + 1, num_cols + 1))
+
+        # Step 8: Create output DataFrames
+        table0 = pd.DataFrame(rankcolj3_reshape, columns=column_names4, index=row_names1 + ['sum_col', 'rank_col'])
+        table1 = pd.DataFrame(rankrowj3_reshape, columns=column_names4, index=row_names1 + ['sum_row'])
+
+        return table0, table1
+
+    except Exception as e:
+        print(f"Error in sum_rank2 function: {e}")
+        return None, None
+
 
     ans = None  # Initialize ans to None
     try:
