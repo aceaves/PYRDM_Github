@@ -151,30 +151,40 @@ else:
 ##############################################################################
 # Check if ans2 exists
 if 'ans2' in locals():
-    data = ans2.iloc[:-2, :-2]  # Drop last two rows and last two columns if they are metadata
-    ysmoothed = gaussian_filter1d(data.values, sigma=2.3, axis=0)
+    # Drop last two rows and columns if needed
+    data = ans2.iloc[:-2, :-2]
 
-    fig2, ax2 = plt.subplots(figsize=(20, 10), dpi=80, facecolor='lightgrey', edgecolor='k')
-    ax2.plot(ysmoothed)
+    # Keep only numeric columns
+    data_numeric = data.select_dtypes(include=[np.number])
 
-    ax2.set_xticks([0, 20, 40, 60, 80, 100, 120])
-    ax2.set_xticklabels(['2020', '2025', '2030', '2035', '2040', '2045', '2050'], rotation=30, fontsize=14)
-    ax2.set_yticks(ax2.get_yticks())
-    ax2.set_yticklabels([f"{y:.2f}" for y in ax2.get_yticks()], fontsize=14)
+    if data_numeric.empty:
+        st.error("No numeric data available for smoothing.")
+    else:
+        # Convert to NumPy and smooth
+        ysmoothed = gaussian_filter1d(data_numeric.to_numpy(), sigma=2.3, axis=0)
 
-    ax2.set_title('LINE GRAPH OF SCENARIOS BY TIMESTEP', fontsize=16, color='black')
-    ax2.set_xlabel('YEAR', fontsize=16, color='black')
-    ax2.set_ylabel('MINIMUM REGRET (Deviation from ideal scenario)', fontsize=16, color='black')
-    ax2.grid(color='lightgrey', linestyle='-', linewidth=0.3)
+        # Plot
+        fig2, ax2 = plt.subplots(figsize=(20, 10), dpi=80, facecolor='lightgrey', edgecolor='k')
+        ax2.plot(ysmoothed)
 
-    # Optional legend
-    scenario_labels = ['Scenario ' + str(i+1) for i in range(ysmoothed.shape[1])]
-    lg = ax2.legend(scenario_labels, title='SCENARIOS', fontsize=16)
-    lg.get_title().set_fontsize(14)
+        ax2.set_xticks([0, 20, 40, 60, 80, 100, 120])
+        ax2.set_xticklabels(['2020', '2025', '2030', '2035', '2040', '2045', '2050'], rotation=30, fontsize=14)
+        ax2.set_yticks(ax2.get_yticks())
+        ax2.set_yticklabels([f"{y:.2f}" for y in ax2.get_yticks()], fontsize=14)
 
-    st.pyplot(fig2)
+        ax2.set_title('LINE GRAPH OF SCENARIOS BY TIMESTEP', fontsize=16, color='black')
+        ax2.set_xlabel('YEAR', fontsize=16, color='black')
+        ax2.set_ylabel('MINIMUM REGRET (Deviation from ideal scenario)', fontsize=16, color='black')
+        ax2.grid(color='lightgrey', linestyle='-', linewidth=0.3)
+
+        scenario_labels = ['Scenario ' + str(i+1) for i in range(ysmoothed.shape[1])]
+        lg = ax2.legend(scenario_labels, title='SCENARIOS', fontsize=16)
+        lg.get_title().set_fontsize(14)
+
+        st.pyplot(fig2)
 else:
     st.warning("ans2 not loaded. Please load scenario data.")
+
 ##############################################################################
 ##############################################################################
 
